@@ -5,6 +5,8 @@ const compression = require('compression')
 const morgan = require('morgan')
 const rateLimit = require('express-rate-limit')
 const config = require('./config/config')
+const { sequelize } = require('./database/models').default;
+const { mountSwagger } = require('./docs');
 
 // Import router configuration
 const { setupRoutes } = require('./config/router')
@@ -40,6 +42,11 @@ app.use('/', limiter)
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// Swagger (mount after basic middleware, before 404 handler)
+if (config.nodeEnv !== 'test') {
+  mountSwagger(app, { sequelize, config });
+}
 
 // Setup all routes (versioning, API routes, error handling)
 setupRoutes(app)

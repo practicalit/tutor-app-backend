@@ -35,7 +35,8 @@
         "db:seed:undo": "npx sequelize-cli db:seed:undo:all",
         "docker:build": "docker build -t node-express-pg-starter .",
         "docker:run": "docker-compose up -d",
-        "docker:stop": "docker-compose down"
+        "docker:stop": "docker-compose down",
+        "docs": "node -e \"require('http').get('http://localhost:'+(process.env.PORT||3000)+'/docs',res=>console.log('Open http://localhost:'+ (process.env.PORT||3000) + '/docs'))\""
     },
     "keywords": [
         "nodejs",
@@ -64,6 +65,8 @@
         "pg": "^8.12.0",
         "pg-hstore": "^2.3.4",
         "sequelize": "^6.37.3",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.1",
         "uuid": "^10.0.0"
     },
     "devDependencies": {
