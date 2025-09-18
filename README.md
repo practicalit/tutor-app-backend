@@ -1035,5 +1035,6 @@ This project includes interactive API documentation powered by **Swagger UI**.
 - If you receive a `429 Too Many Requests` error, you may be hitting the rate limit.
 - Rate Limit is disabled during testing.  
   See [Rate Limiting](#rate-limiting) for details on how to adjust or disable it during testing.
+- If using docker, make sure it is installed and up and running first.
 
 ---
