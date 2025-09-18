@@ -1,17 +1,12 @@
-import db from '../database/models/index.js'
-
-const { User } = db
+import * as userService from '../services/userService.js'
 
 const getProfile = async (req, res, next) => {
   try {
-    const user = req.user
-
+    const user = userService.getProfile(req.user)
     res.status(200).json({
       success: true,
       message: 'Profile retrieved successfully',
-      data: {
-        user
-      }
+      data: { user }
     })
   } catch (error) {
     next(error)
@@ -20,21 +15,11 @@ const getProfile = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
-    const user = req.user
-    const { firstName, lastName } = req.body
-
-    // Update user profile
-    await user.update({
-      firstName: firstName || user.firstName,
-      lastName: lastName || user.lastName
-    })
-
+    const user = await userService.updateProfile(req.user, req.body)
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      data: {
-        user
-      }
+      data: { user }
     })
   } catch (error) {
     next(error)
@@ -43,11 +28,7 @@ const updateProfile = async (req, res, next) => {
 
 const deleteAccount = async (req, res, next) => {
   try {
-    const user = req.user
-
-    // Soft delete - set isActive to false
-    await user.update({ isActive: false })
-
+    await userService.deactivateAccount(req.user)
     res.status(200).json({
       success: true,
       message: 'Account deactivated successfully'
@@ -61,15 +42,7 @@ const getUsers = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
-    const offset = (page - 1) * limit
-
-    const { count, rows: users } = await User.findAndCountAll({
-      where: { isActive: true },
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']]
-    })
-
+    const { count, rows: users } = await userService.getUsers(page, limit)
     res.status(200).json({
       success: true,
       message: 'Users retrieved successfully',
@@ -79,7 +52,7 @@ const getUsers = async (req, res, next) => {
           currentPage: page,
           totalPages: Math.ceil(count / limit),
           totalUsers: count,
-          hasNext: offset + limit < count,
+          hasNext: page * limit < count,
           hasPrev: page > 1
         }
       }
@@ -91,128 +64,66 @@ const getUsers = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const { email, password, firstName, lastName, role } = req.body
-
-    // Check if user already exists
-    const existingUser = await User.findByEmail(email)
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'User with this email already exists'
-      })
-    }
-
-    // Create new user
-    const newUser = await User.create({
-      email,
-      password,
-      firstName,
-      lastName,
-      role: role || 'user'
-    })
-
+    const user = await userService.createUser(req.body)
     res.status(201).json({
       success: true,
       message: 'User created successfully',
-      data: {
-        user: newUser
-      }
+      data: { user }
     })
   } catch (error) {
+    if (error.message.includes('already exists')) {
+      return res.status(409).json({ success: false, message: error.message })
+    }
     next(error)
   }
 }
 
 const getUserById = async (req, res, next) => {
   try {
-    const { id } = req.params
-
-    const user = await User.findByPk(id)
-    if (!user || !user.isActive) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      })
-    }
-
+    const user = await userService.getUserById(req.params.id)
     res.status(200).json({
       success: true,
       message: 'User retrieved successfully',
-      data: {
-        user
-      }
+      data: { user }
     })
   } catch (error) {
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: error.message })
+    }
     next(error)
   }
 }
 
 const updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params
-    const { firstName, lastName, role } = req.body
-
-    const user = await User.findByPk(id)
-    if (!user || !user.isActive) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      })
-    }
-
-    // Only admin can change roles
-    const updateData = {
-      firstName: firstName || user.firstName,
-      lastName: lastName || user.lastName
-    }
-
-    // Only allow role update if current user is admin
-    if (role && req.user.role === 'admin') {
-      updateData.role = role
-    }
-
-    await user.update(updateData)
-
+    const user = await userService.updateUser(req.params.id, req.body, req.user)
     res.status(200).json({
       success: true,
       message: 'User updated successfully',
-      data: {
-        user
-      }
+      data: { user }
     })
   } catch (error) {
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: error.message })
+    }
     next(error)
   }
 }
 
 const deleteUser = async (req, res, next) => {
   try {
-    const { id } = req.params
-
-    const user = await User.findByPk(id)
-    if (!user || !user.isActive) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      })
-    }
-
-    // Prevent self-deletion
-    if (user.id === req.user.id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot delete your own account'
-      })
-    }
-
-    // Soft delete - set isActive to false
-    await user.update({ isActive: false })
-
+    await userService.deleteUser(req.params.id, req.user)
     res.status(200).json({
       success: true,
       message: 'User deleted successfully'
     })
   } catch (error) {
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: error.message })
+    }
+    if (error.message === 'Cannot delete your own account') {
+      return res.status(400).json({ success: false, message: error.message })
+    }
     next(error)
   }
 }
@@ -226,4 +137,4 @@ export default {
   getUserById,
   updateUser,
   deleteUser
-} 
+}

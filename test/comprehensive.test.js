@@ -311,7 +311,7 @@ describe('🧪 Comprehensive API Tests', () => {
           .end((err, res) => {
             expect(res).to.have.status(200)
             expect(res.body).to.have.property('success', true)
-            expect(res.body.message).to.contain('Password reset')
+            expect(res.body.message).to.contain('password reset link has been sent')
             done()
           })
       })

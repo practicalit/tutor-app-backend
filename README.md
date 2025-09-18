@@ -1006,3 +1006,33 @@ NODE_ENV=production npm run db:migrate
 ```bash
 npm start
 ```
+
+## API Documentation
+
+### Swagger UI
+
+This project includes interactive API documentation powered by **Swagger UI**.
+
+- **URL:**  
+  [http://localhost:3000/docs](http://localhost:3000/docs)
+
+- **Features:**  
+  - Explore all available endpoints
+  - View request/response schemas
+  - Try out API calls directly from the browser
+
+#### How to Use
+
+1. Start your development server:
+   ```bash
+   npm run dev
+   ```
+2. Open your browser and navigate to [http://localhost:3000/docs](http://localhost:3000/docs)
+3. Use the Swagger UI to view and test API endpoints.
+
+#### Troubleshooting
+
+- If you receive a `429 Too Many Requests` error, you may be hitting the rate limit.  
+  See [Rate Limiting](#rate-limiting) for details on how to adjust or disable it during testing.
+
+---

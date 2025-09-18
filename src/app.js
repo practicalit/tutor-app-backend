@@ -37,7 +37,11 @@ if (config.nodeEnv === 'development') {
 
 // Rate limiting
 const limiter = rateLimit(config.rateLimit)
-app.use('/', limiter)
+// Only use rate limiter if not in test environment
+if (config.nodeEnv !== 'test') {
+  //app.use(limiter)
+  app.use('/', limiter)
+}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }))
