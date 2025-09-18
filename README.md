@@ -1021,7 +1021,7 @@ This project includes interactive API documentation powered by **Swagger UI**.
   - View request/response schemas
   - Try out API calls directly from the browser
 
-#### How to Use
+#### How to Use swagger
 
 1. Start your development server:
    ```bash
